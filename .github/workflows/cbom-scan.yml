@@ -13,7 +13,7 @@ jobs:
 
       - name: Run QuantumGuard CBOM Scanner
         id: cbom
-        uses: https://github.com/test-srm-digi/cbom-analyser@v1
+        uses: test-srm-digi/cbom-analyser@v1
         with:
           scan-path: '.'
           output-format: 'sarif'
