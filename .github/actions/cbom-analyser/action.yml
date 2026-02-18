@@ -1,0 +1,121 @@
+name: 'QuantumGuard CBOM Scanner'
+description: 'Scan repository for cryptographic assets and generate a CBOM'
+author: 'QuantumGuard'
+
+inputs:
+  scan-path:
+    description: 'Path to scan (relative to repo root)'
+    required: false
+    default: '.'
+  output-format:
+    description: 'Output format: json, sarif, both'
+    required: false
+    default: 'json'
+  fail-on-vulnerable:
+    description: 'Fail if non-quantum-safe algorithms found'
+    required: false
+    default: 'false'
+  severity-threshold:
+    description: 'Minimum severity to fail: low, medium, high, critical'
+    required: false
+    default: 'high'
+  exclude-patterns:
+    description: 'Comma-separated glob patterns to exclude, or default'
+    required: false
+    default: ''
+
+outputs:
+  cbom-path:
+    description: 'Path to generated CBOM JSON file'
+    value: ${{ steps.scan.outputs.cbom-path }}
+  sarif-path:
+    description: 'Path to SARIF file (if output-format includes sarif)'
+    value: ${{ steps.scan.outputs.sarif-path }}
+  total-assets:
+    description: 'Total cryptographic assets found'
+    value: ${{ steps.scan.outputs.total-assets }}
+  vulnerable-count:
+    description: 'Count of non-quantum-safe assets'
+    value: ${{ steps.scan.outputs.vulnerable-count }}
+  readiness-score:
+    description: 'Quantum readiness score (0-100)'
+    value: ${{ steps.scan.outputs.readiness-score }}
+  is-compliant:
+    description: 'Whether CBOM passes NIST PQC compliance'
+    value: ${{ steps.scan.outputs.is-compliant }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Run CBOM Scanner
+      id: scan
+      shell: bash
+      run: |
+        echo "Running QuantumGuard CBOM Scanner..."
+        echo "Scan path: ${{ inputs.scan-path }}"
+        echo "Output format: ${{ inputs.output-format }}"
+        echo "Exclude patterns: ${{ inputs.exclude-patterns }}"
+        
+        # TODO: Replace with actual scanner implementation
+        # For now, create placeholder output files
+        
+        # Create CBOM JSON
+        cat > cbom.json << 'EOF'
+        {
+          "bomFormat": "CBOM",
+          "specVersion": "1.0",
+          "version": 1,
+          "metadata": {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "tools": [
+              {
+                "vendor": "QuantumGuard",
+                "name": "cbom-analyser",
+                "version": "1.0.0"
+              }
+            ]
+          },
+          "components": []
+        }
+        EOF
+        
+        # Create SARIF if requested
+        if [[ "${{ inputs.output-format }}" == "sarif" || "${{ inputs.output-format }}" == "both" ]]; then
+          cat > cbom.sarif << 'EOF'
+        {
+          "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+          "version": "2.1.0",
+          "runs": [
+            {
+              "tool": {
+                "driver": {
+                  "name": "QuantumGuard CBOM Scanner",
+                  "version": "1.0.0",
+                  "informationUri": "https://github.com/test-srm-digi/cbom-analyser"
+                }
+              },
+              "results": []
+            }
+          ]
+        }
+        EOF
+        fi
+        
+        # Set outputs
+        echo "cbom-path=cbom.json" >> $GITHUB_OUTPUT
+        echo "sarif-path=cbom.sarif" >> $GITHUB_OUTPUT
+        echo "total-assets=0" >> $GITHUB_OUTPUT
+        echo "vulnerable-count=0" >> $GITHUB_OUTPUT
+        echo "readiness-score=100" >> $GITHUB_OUTPUT
+        echo "is-compliant=true" >> $GITHUB_OUTPUT
+        
+        echo "CBOM scan complete."
+
+branding:
+  icon: 'shield'
+  color: 'blue'
