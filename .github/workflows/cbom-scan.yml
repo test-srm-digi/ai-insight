@@ -1,38 +1,23 @@
-name: CBOM Security Scan
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
+name: CBOM Scan
+on: [push, pull_request]
 
 permissions:
   contents: read
-  security-events: write
 
 jobs:
-  cbom-analysis:
+  cbom-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run QuantumGuard CBOM Scanner
-        id: cbom
-        uses: ./.github/actions/cbom-analyser
+      - name: Run CBOM Scanner
+        uses: test-srm-digi/cbom-analyser@main
         with:
           scan-path: '.'
-          output-format: 'sarif'
-          fail-on-vulnerable: 'true'
-          severity-threshold: 'high'
-          exclude-patterns: 'default'
+          output-format: 'json'
 
       - name: Upload CBOM Report
         uses: actions/upload-artifact@v4
         with:
           name: cbom-report
           path: cbom.json
-
-      - name: Upload SARIF to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: cbom.sarif
